@@ -2,7 +2,7 @@
 
 Maximum Coverage Connected Subgraph by Branch and Cut for driver pathways analysis
 
-## Install
+## Installation
 
 Download the package as zip or via git clone. Eg:
 
