@@ -11,8 +11,10 @@ __pycache__/
 env/
 build/
 develop-eggs/
+# Setuptools distribution folder.
 dist/
 downloads/
+# Python egg metadata, regenerated from source files by setuptools.
 eggs/
 .eggs/
 lib/

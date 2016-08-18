@@ -25,7 +25,7 @@ class Solver:
             self.data = d.Data.from_file(i, m, w)
         self.base_obj = base_obj
         self.sol_set = sol_set
-        self.result = r.Result(mode, i, m, k, w, x, time_limit)
+        self.result = r.Result(mode, i, m, w, x, time_limit)
 
     def solve(self):
         objective, solution_set, termination_indicator = 0, set(), 0

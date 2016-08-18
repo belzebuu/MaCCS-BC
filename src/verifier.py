@@ -9,11 +9,17 @@ def main(args):
     :return: True if the solution induces a connected subgraph, False otherwise
     """
     mode = 0 # TODO add some default value
-    solution_saver = r.Solution(mode, args.solution_file, args.interactions, args.mutations, args.weights,
+    solution_manager = r.Solution(mode, args.solution_file, args.interactions, args.mutations, args.weights,
                                 args.exclusive)
-    coverage, solution_set = solution_saver.get_solution()
-    solution_saver.check_connectivity(solution_set)
-    print len(solution_saver.solution_coverage(solution_set))
+    solutions = solution_manager.get_solutions()
+    for s in solutions:
+        value, subgraph = solution_manager.split_solution(solutions, s)
+        con = solution_manager.check_connectivity(subgraph)
+        print "Number of nodes: %d; connectivity check: %r" % (len(subgraph),con)
+        cov = len(solution_manager.coverage(subgraph))
+        print "Coverage declared: %d; coverage verified: %d" %(value,cov)
+        
+    #print "Coverage: ",len(solution_saver.solution_coverage(solution_set))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Choose an instance to solve')

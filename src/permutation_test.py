@@ -63,6 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('-w', '--weights', type=str, help='a path to the file containing node (gene) weights')
     parser.add_argument('-o', '--output_file', type=str,
                         help='file for saving solutions. An extension (.json) will be added')
+    parser.add_argument('-n', type=int, help='number of instances in permutation test', required=True)
     parser.add_argument('-x', '--exclusive', dest='exclusive', action='store_true', help='use exclusive objective')
     parser.add_argument('-v', '--verbose', dest='verbose', action='store_true', help='show verbose output')
     parser.add_argument('-t', '--time_limit', type=int, help='solver time limit (in seconds)')
@@ -71,7 +72,6 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--all', dest="allsolutions", action="store_true",help='find all solutions')
     parser.add_argument('--threads', type=int,
                         help='number of processes to execute simultaneously (default number of cores)', required=False)
-    parser.add_argument('-n', type=int, help='number of instances in permutation test', required=True)
     parser.set_defaults(exclusive=False)
     parser.set_defaults(verbose=False)
     parser.set_defaults(preprocessing=True)

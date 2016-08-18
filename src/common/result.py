@@ -97,10 +97,9 @@ class Solution:
         :param exclusive:               use exclusive objective
         :return:
         """
-        self.interactions = interactions
-        self.mutations = mutations
-        self.weights = weights
+        self.data = d.Data.from_file(interactions, mutations, weights)
         self.output_file = output_file
+
         self.key = '_'.join([os.path.splitext(os.path.basename(interactions))[0],
                              os.path.splitext(os.path.basename(mutations))[0]])
         if weights:
@@ -110,7 +109,7 @@ class Solution:
         self.key = unicode(self.key, "utf-8")
         self.mode = mode
 
-    def get_all_solutions(self):
+    def get_solutions(self):
         if not os.path.isfile(self.output_file):
             return dict()
         sol_file = open(self.output_file, 'r')
@@ -118,12 +117,11 @@ class Solution:
         sol_file.close()
         return solutions
 
-    def get_solution(self):
+    def split_solution(self, solutions, key):
         """
         :return: set on nodes in the solution that has been saved for an instance of the problem
         """
-        solutions = self.get_all_solutions()
-        return solutions[self.key]['value'], solutions[self.key]['genes']
+        return solutions[key]['value'], solutions[key]['genes']
 
         #if self.key in solutions.keys():
         #    if self.mode == const.MODE_RESOLVE:
@@ -176,20 +174,21 @@ class Solution:
             print "Solution saved"
         return 0
 
-    def solution_coverage(self, solution_set):
-        data = d.Data.from_file(self.interactions, self.mutations, self.weights)
+    def coverage(self, solution_set):
         coverage = set()
 
         if solution_set:
             for n in solution_set:
-                if n in data.node_mutations:
-                    coverage |= data.node_mutations[n]
+                if n in self.data.node_mutations:
+                    coverage |= self.data.node_mutations[n]
         return coverage
 
+
+
     def weighted_coverage(self, solution_set):
-        if not self.weights:
+        if not self.data.weights:
             return None
-        data = d.Data.from_file(self.interactions, self.mutations, self.weights)
+
         w_coverage = dict()
         if solution_set:
             for n in solution_set:
@@ -210,22 +209,11 @@ class Solution:
         :param solution_set: ({int})                set of nodes, that are believed to be a valid solution
         :return: True if the grap induced by solution set is connected, False otherwise
         """
-        if solution_set:
-            data = d.Data.from_file(self.interactions, self.mutations, self.weights)
-            G = data.make_graph()
+        if solution_set:            
+            G = self.data.make_graph()
             G_sub = G.subgraph(solution_set)
-            con = nx.is_connected(G_sub)
-            print "Connectivity check: %r" % con
+            con = nx.is_connected(G_sub)            
             return con
         else:
             return False
-
-    def solution_coverage(self, solution_set):
-        coverage = set()
-	data = d.Data.from_file(self.interactions, self.mutations, self.weights)
-        if solution_set:
-            for n in solution_set:
-                if n in data.node_mutations:
-                    coverage |= data.node_mutations[n]
-        return coverage
 
