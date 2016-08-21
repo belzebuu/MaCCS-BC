@@ -1,10 +1,14 @@
 # Data Format
 
 
-- A file for the interaction network (ie, undirected graph) containing a
-  list of edges one per row:
+- A file containing indication of the gene interaction network.  The
+  network is obtained by preprocessing a protein interaction network as
+  follows. Two genes are connected if there is at least a pair of
+  proteins that contain them and that are interecting.  The gene
+  intereaction network is an undirected graph. The file contains a list
+  of edges one per row:
 
-  For example, content of file BRCA.txt:
+  For example, content of file interactions.txt:
   1433B 1433E 
   1433B 1A1L1
   ...
@@ -43,7 +47,8 @@
   
   
   which indicates that the patient TCGA-AB-2802 had the genes listed
-  mutated in the cancer of type laml.
+  mutated in the cancer of type laml. Genes listed in the mutation file
+  and not present in the interactions file will be ignored.
     
   
 - weight file. This file is optional. It contains a list of weights
