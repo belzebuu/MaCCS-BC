@@ -52,13 +52,14 @@ class Data:
         with open(mutation_file) as mf:
             for line in mf:
                 fields = line.split()
-                # # ctype = fields[0]
                 patient = fields[0]
+		patient_added = False
                 for g_node in fields[1:]:
                     if g_node in used_genes:
-                        # # data.patient_type[patient] = ctype
                         # add patient
-                        data.patients.append(patient)
+			if not patient_added:
+                            data.patients.append(patient)
+			    patient_added = True
                         data.append_mutation(patient, g_node)
 
         if weight_file:
