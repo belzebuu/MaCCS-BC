@@ -17,7 +17,7 @@ def perm_test(solver):
 
 def main(args):
     mode = const.MODE_SOLVE
-    solver = model.Solver(mode, args.interactions, args.mutations, args.k, args.weights,
+    solver = model.Solver(mode, args.interactions, args.mutations, args.genes, args.k, args.weights,
                           args.exclusive, args.verbose, args.time_limit, args.preprocessing)
     base_obj, sol_set, _, _ = solver.solve()
 
@@ -32,9 +32,9 @@ def main(args):
 
     pool = Pool(processes=threads)
     a_args = range(args.n)
-    b_args = [model.Solver(mode, args.interactions, args.mutations, args.k, args.weights,
+    b_args = [model.Solver(mode, args.interactions, args.mutations, args.genes, args.k, args.weights,
                            args.exclusive, args.verbose, args.time_limit, args.preprocessing,
-                           data=d.Data.from_file(args.interactions, args.mutations, args.weights).permute_mutations(seed),
+                           data=d.Data.from_file(args.interactions, args.mutations, args.genes, args.weights).permute_mutations(seed),
                            base_obj=base_obj,
                            sol_set=sol_set) for seed in a_args]
     start_time = time.time()
@@ -59,6 +59,7 @@ if __name__ == "__main__":
     parser.add_argument('-i', '--interactions', type=str,
                         help='a path to the file containing interactions', required=True)
     parser.add_argument('-m', '--mutations', type=str, help='a path to the file containing mutations', required=True)
+    parser.add_argument('-g', '--genes', type=str, help='a path to the file containing genes', required=True)
     parser.add_argument('-k', type=int, help='number of nodes to choose from the gene nodes', required=True)
     parser.add_argument('-w', '--weights', type=str, help='a path to the file containing node (gene) weights')
     parser.add_argument('-o', '--output_file', type=str,

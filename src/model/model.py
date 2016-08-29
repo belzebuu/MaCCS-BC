@@ -8,11 +8,12 @@ import time
 
 
 class Solver:
-    def __init__(self, mode, i, m, k, w=None, x=False, v=5, time_limit=None, preprocessing=True, data=None,
+    def __init__(self, mode, i, m, k, g, w=None, x=False, v=5, time_limit=None, preprocessing=True, data=None,
                  base_obj=None, sol_set=None):
         self.mode = mode
         self.interaction_file = i
         self.mutation_file = m
+        self.gene_file = g
         self.k = k
         self.weights = w
         self.exclusive = x
@@ -22,7 +23,7 @@ class Solver:
         if data:
             self.data = data
         else:
-            self.data = d.Data.from_file(i, m, w)
+            self.data = d.Data.from_file(i, m, g, w)
         self.base_obj = base_obj
         self.sol_set = sol_set
         self.result = r.Result(mode, i, m, w, x, time_limit)
@@ -343,7 +344,7 @@ class Solver:
 
     def add_solution_cut(self, m, variables, sol_set, objective=None):
         m.params.OutputFlag = 0  # TODO ?
-        x, _, coverage, alternative = variables
+        x, _, coverage, exclusive = variables
         print "Adding solution cut and objective value bound"
         assert len(sol_set) == self.k
         m.addConstr(quicksum(x[i] for i in sol_set) <= self.k - 1)

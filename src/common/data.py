@@ -8,7 +8,7 @@ import copy
 
 class Data:
     def __init__(self, nodes=None, patients=None, mutations=None, interactions=None,
-                 node_mutations=None, node_neighbors=None):
+                 node_mutations=None, node_neighbors=None, gene_nodes=None):
         """
         :param nodes: ([str])                   gene nodes
         :param patients: ([str])                patient ids
@@ -26,6 +26,7 @@ class Data:
         # auxiliary data structures
         self.node_mutations = OrderedDict() if node_mutations is None else node_mutations
         self.node_neighbors = OrderedDict() if node_neighbors is None else node_neighbors
+        self.gene_nodes = OrderedDict() if gene_nodes is None else gene_nodes
         self.weights = dict()
 
     def __str__(self):
@@ -33,46 +34,54 @@ class Data:
                % (len(self.nodes), len(self.patients), len(self.mutations), len(self.interactions))
 
     # # # READ IN DATA
-    # done
     @classmethod
-    def from_file(cls, interaction_file, mutation_file, weight_file=None):
+    def from_file(cls, interaction_file, mutation_file, gene_file, weight_file=None):
         print
         data = cls()
-        used_genes = set()
+        used_nodes = set()
+
+        with open(gene_file) as gf:
+            for line in gf:
+                n_str, g = line.split()
+                n = int(n_str)
+                if g in data.gene_nodes:
+                    data.gene_nodes[g].append(n)
+                else:
+                    data.gene_nodes[g] = [n]
 
         with open(interaction_file) as inf:
             for line in inf:
                 node_a, node_b = line.split()
-                used_genes.add(node_a)
-                used_genes.add(node_b)
-                # add interaction
-                data.append_interaction(node_a, node_b)
-        data.nodes = list(used_genes)
+                if node_a in data.gene_nodes.values() and node_b in data.gene_nodes.values():
+                    used_nodes.add(node_a)
+                    used_nodes.add(node_b)
+                    # add interaction
+                    data.append_interaction(node_a, node_b)
+        data.nodes = list(used_nodes)
 
         with open(mutation_file) as mf:
             for line in mf:
                 fields = line.split()
+                # # ctype = fields[0]
                 patient = fields[0]
-		patient_added = False
-                for g_node in fields[1:]:
-                    if g_node in used_genes:
-                        # add patient
-			if not patient_added:
+                for g in fields[1:]:
+                    for n in data.gene_nodes[g]:
+                        if n in used_nodes:
                             data.patients.append(patient)
-			    patient_added = True
-                        data.append_mutation(patient, g_node)
+                            data.append_mutation(patient, n)
 
         if weight_file:
             with open(weight_file) as wf:
                 for line in wf:
-                    g_node, weight = line.split()
-                    if not float(weight) == 0.0:
-                        data.weights[g_node] = float(weight)
+                    gene, weight = line.split()
+                    if gene in data.gene_nodes and float(weight) != 0.0:
+                        for node in data.gene_nodes[gene]:
+                            if node in used_nodes:
+                                data.weights[node] = float(weight)
         print data
         return data
 
     # # # HELPER FUNCTIONS
-    # done
     def append_interaction(self, node_a, node_b):
         self.interactions.append((node_a, node_b))
         if node_a in self.node_neighbors:
@@ -84,7 +93,6 @@ class Data:
         else:
             self.node_neighbors[node_b] = {node_a}
 
-    # done
     def append_mutation(self, patient, g_node):
         self.mutations.append((patient, g_node))
         if g_node in self.node_mutations:
@@ -114,7 +122,6 @@ class Data:
                     self.append_mutation(p, shuffled_dictionary[n])
             for u in original.node_neighbors[n]:
                 self.append_interaction(shuffled_dictionary[n], shuffled_dictionary[u])
-
 
     def make_graph(self):
         G = nx.Graph()

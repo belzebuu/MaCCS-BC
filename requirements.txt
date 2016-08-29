@@ -6,7 +6,6 @@
 ###### Requirements with Version Specifiers ######
 #   See https://www.python.org/dev/peps/pep-0440/#version-specifiers
 setuptools
-decorator >= 4.0.2
 networkx >= 1.9.1 
 numpy >= 1.9.0
 argparse
