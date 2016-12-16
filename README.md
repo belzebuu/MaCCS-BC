@@ -14,7 +14,7 @@ Currently, MaCCS-BC consists of three Python scripts rather than being a library
 
 ## Usage
 
-To find the set maximum coverage connected subgraph, ie, a driver pathway:
+To find the maximum coverage connected subgraph, ie, a driver pathway:
 
 ``` bash
 cd maccs-bc
