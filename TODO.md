@@ -31,6 +31,7 @@ single component
   
   
 - decide k
+```bash
   k-fold crossvalidation to decide k - Unweighted case 
   
   Assume 3000 patients. Use them for: Training, evaluation, assessment
@@ -58,7 +59,7 @@ single component
   histogram of genes present in the solutions (frequency of each gene selected)
 
   Peeking avoided since we do not look at genes in selecting k...
-
+```
 - Add flow formulation
 - Add better description heuristics
 
