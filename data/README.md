@@ -4,8 +4,8 @@
 - A file containing indication of the gene interaction network.  The
   network is obtained by preprocessing a protein interaction network as
   follows. Two genes are connected if there is at least a pair of
-  proteins that contain them and that are interecting.  The gene
-  intereaction network is an undirected graph. The file contains a list
+  proteins that contain them and that are interacting.  The gene
+  interaction network is an undirected graph. The file contains a list
   of edges one per row:
 
   For example, content of file interactions.txt:

@@ -4,7 +4,9 @@ import model.model as model
 import argparse
 import common.constants as const
 from time import time
+import common.data as cd
 import common.result as cr
+
 
 
 def main(args):
@@ -16,15 +18,22 @@ def main(args):
 
     try:
         start_time = time()
-        solver = model.Solver(mode, args.interactions, args.mutations, args.k, args.weights,
-                              args.exclusive, args.verbose, args.time_limit, args.preprocessing)
+
+        data = cd.Data()
+        if args.genes:
+            data.from_three_files(args.genes, args.interactions, args.mutations, args.weights)
+        else:
+            data.from_two_files(args.interactions, args.mutations, args.weights)
+                        
+        solver = model.Solver(mode, args.k, 
+                              args.exclusive, args.verbose, args.time_limit, args.preprocessing,
+                              data)
         objective, solution_set, _, result = solver.solve()
         print result
         print 'Execution finished in %.3f seconds' % (time() - start_time)
 
         if solution_set and args.output_file is not None:
-            solution_saver = cr.Solution(mode, args.output_file, args.interactions, args.mutations,
-                                         args.weights, args.exclusive)
+            solution_saver = cr.Solution(mode, args.output_file, data, args.exclusive)
             if args.append:
                 solution_saver.add_solution(objective, solution_set)
             else:
@@ -37,6 +46,7 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Choose an instance to solve')
+    parser.add_argument('-g', '--genes', type=str, help='a path to the file containing the genes')
     parser.add_argument('-i', '--interactions', type=str, help='a path to the file containing interactions', required=True)
     parser.add_argument('-m', '--mutations', type=str, help='a path to the file containing mutations', required=True)
     parser.add_argument('-k', type=int, help='number of nodes to choose from the gene nodes', required=True)

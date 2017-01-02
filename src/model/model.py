@@ -8,24 +8,18 @@ import time
 
 
 class Solver:
-    def __init__(self, mode, i, m, k, w=None, x=False, v=5, time_limit=None, preprocessing=True, data=None,
-                 base_obj=None, sol_set=None):
+    def __init__(self, mode, k, exclusive=False, verbosity=5, time_limit=None, preprocessing=True, 
+                data=None, base_obj=None, sol_set=None):
         self.mode = mode
-        self.interaction_file = i
-        self.mutation_file = m
         self.k = k
-        self.weights = w
-        self.exclusive = x
-        self.verbose = v
+        self.exclusive = exclusive
+        self.verbose = verbosity
         self.preprocessing = preprocessing
         self.time_limit = time_limit
-        if data:
-            self.data = data
-        else:
-            self.data = d.Data.from_file(i, m, w)
+        self.data = data
         self.base_obj = base_obj
         self.sol_set = sol_set
-        self.result = r.Result(mode, i, m, w, x, time_limit)
+        self.result = r.Result(mode, exclusive, time_limit)
 
     def solve(self):
         objective, solution_set, termination_indicator = 0, set(), 0

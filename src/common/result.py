@@ -7,7 +7,7 @@ import common.constants as const
 
 
 class Result:
-    def __init__(self, mode, i, m, w=None, x=None, time_limit=None):
+    def __init__(self, mode, data, x=None, time_limit=None):
         """
         :param mode:
         :param i: (str)             interaction file path
@@ -20,16 +20,14 @@ class Result:
         :return:
         """
         self.mode = mode
-        self.interaction_file = i
-        self.mutation_file = m
-        self.weights = w if w else ' '
         self.exclusive = x if x else ' '
         self.time_limit = time_limit if time_limit else sys.maxint
         self.solve_measurement = list()
 
 
     def __str__(self):
-        s = Result.header() + '#%d,%s,%s,%s,%r,%d\n' % (self.mode, self.interaction_file, self.mutation_file,
+        s = Result.header() + '#%d,%s,%s,%s,%r,%d\n' % (self.mode, self.interaction_file, 
+                                                            self.mutation_file,
                                                               self.weights, self.exclusive,
                                                               self.time_limit)
         m = ""
@@ -86,7 +84,7 @@ class SolveMeasurement:
 
 
 class Solution:
-    def __init__(self, mode, output_file, interactions, mutations, weights=None, exclusive=None):
+    def __init__(self, mode, output_file, data, exclusive=None):
         """
         :param mode:                    solving mode: single solve, all solutions or bounded solver
         :param interactions:            interaction file path
@@ -97,7 +95,7 @@ class Solution:
         :param exclusive:               use exclusive objective
         :return:
         """
-        self.data = d.Data.from_file(interactions, mutations, weights)
+        self.data = data 
         self.output_file = output_file
 
         self.key = '_'.join([os.path.splitext(os.path.basename(interactions))[0],
