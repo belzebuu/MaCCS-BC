@@ -12,7 +12,8 @@ class Preprocess:
         return
 
     # done
-    def preprocess_with_weights(self, data, k):
+    @classmethod
+    def preprocess_with_weights(cls, data, k):
         data_components = list()
         small_components = set()
         g = self.make_graph(data)
@@ -84,9 +85,10 @@ class Preprocess:
         return graph
 
     # done
-    def preprocess(self, data, k):
+    @classmethod
+    def preprocess(cls, data, k):
         if data.weights:
-            return data.preprocess_with_weights(k)
+            return cls.preprocess_with_weights(k)
         data_components = list()
         small_components = set()
         g = self.make_graph(data)

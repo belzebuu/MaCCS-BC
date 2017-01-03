@@ -42,6 +42,10 @@ class Data:
 
         self.weights = dict()
 
+        self.components = list()
+
+
+
     def __str__(self):
         m = "Read instance:\n"
         if self.gene_file:

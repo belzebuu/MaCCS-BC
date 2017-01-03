@@ -5,6 +5,7 @@ import common.data as d
 import common.preprocessing as p
 import common.result as r
 import time
+import copy
 
 
 class Solver:
@@ -17,42 +18,45 @@ class Solver:
         self.preprocessing = preprocessing
         self.time_limit = time_limit
         self.data = data
+        self.components = d.Data()
         self.base_obj = base_obj
         self.sol_set = sol_set
         self.result = r.Result(mode, exclusive, time_limit)
 
     def solve(self):
-        objective, solution_set, termination_indicator = 0, set(), 0
-        main_model, main_variables = None, list()
 
-        if not self.preprocessing:
-            main_model, main_variables = self.define_model()
-            objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
-
-        else:
+        if self.preprocessing:
             print "Preprocessing instance..."            
-            preprocess = p.Preprocess()
-            components = preprocess.preprocess(self.data, self.k)
+            #preprocess = p.Preprocess()
+            components = Preprocess.preprocess(self.data, self.k)
 
             if len(components) == 1:
                 print "single component"
-                self.data = components[0]
-                main_model, main_variables = self.define_model()
-                objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
-
+                self.components = components[0]
             else:
-                print "many components"
-                for component in components:
-                    self.data = component
-                    model, variables = self.define_model()
-                    obj, sol, ti = self.solve_model(model, variables)
+                print "%d components" % (len(components)
 
-                    if obj > objective or (self.mode == constants.MODE_VERSUS and ti > termination_indicator):
-                        objective = obj
-                        solution_set = sol
-                        termination_indicator = ti
-                        main_model = model
-                        main_variables = variables
+
+        objective, solution_set, termination_indicator = 0, set(), 0
+        main_model, main_variables = None, list()
+
+        for component in components:
+            self.data = component
+                model, variables = self.define_model()
+                obj, sol, ti = self.solve_model(model, variables)
+
+                if obj > objective or (self.mode == constants.MODE_VERSUS and ti > termination_indicator):
+                    objective = obj
+                    solution_set = sol
+                    termination_indicator = ti
+                    main_model = model
+                    main_variables = variables
+
+        main_model, main_variables = self.define_model()
+        objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
+
+
+
 
         if self.mode == constants.MODE_SOLVE:
             return objective, solution_set, termination_indicator, self.result
