@@ -5,19 +5,16 @@ The input files can be organized in two formats.
 ## Three files
 
 1. Interaction Network
-
-  
-The example data are taken from the hippie_current.txt: 
-```bash
-wget http://cbdm.mdc-berlin.de/tools/hippie/hippie_current.txt 
-```
-on March 7, 2015 from Fabio (see /home/data on server)
-
-
-- hippie_genes.txt:
-    mapping of vertex IDs to gene IDs
-    format: 1 vertex per line, each line:vertexID geneID
-    Note: a geneID may be associated to more than a vertexID
+   The example data are taken from the hippie_current.txt: 
+   ```bash
+   wget http://cbdm.mdc-berlin.de/tools/hippie/hippie_current.txt 
+   ```
+   on March 7, 2015 from Fabio (see /home/data on server)
+   
+   * hippie_genes.txt:
+     mapping of vertex IDs to gene IDs
+		format: 1 vertex per line, each line:vertexID geneID
+			Note: a geneID may be associated to more than a vertexID
 
 	Eg: 
 	1 1433B
@@ -28,41 +25,41 @@ on March 7, 2015 from Fabio (see /home/data on server)
 	...
 
 
-- hippie_edges.txt:
-  list of edges in the interaction network
-  format: 1 edge (vetex_ID1, vertex_ID2) per line, each line:vertex_ID1 vertex_ID2 1
+	* hippie_edges.txt:
+	  list of edges in the interaction network
+		  format: 1 edge (vetex_ID1, vertex_ID2) per line, each line:vertex_ID1 vertex_ID2 1
   
-  eg:
-  189 6404 1
-  248 8474 1
-  1995 12372 1
-  4117 5363 1
-  4117 9242 1
-  3529 4117 1
-  ...
-
+   eg:
+   189 6404 1
+   248 8474 1
+   1995 12372 1
+   4117 5363 1
+   4117 9242 1
+   3529 4117 1
+   ...
 
 
 2. Mutations
+   The example is taken from TGCA pancancer project, obtained from processing of MAFs from
+   http://cbio.mskcc.org/cancergenomics/pancan_tcga/
 
-The example is taken from TGCA pancancer project, obtained from
-processing of MAFs from
-http://cbio.mskcc.org/cancergenomics/pancan_tcga/
+	The file contains line per patient in the form: patientID gene1
+			gene2 ...  where patientID is an unique patient identifier
+			and gene1 gene2 ... are a list of all genes mutated in the
+			patient
 
-The file contains line per patient in the form: patientID gene1 gene2
-...  where patientID is an unique patient identifier and gene1 gene2
-... are a list of all genes mutated in the patient
+	<!---
+		- cancerType: one of the 11 cancer types in TCGA 
+		--->
 
-<!---
-- cancerType: one of the 11 cancer types in TCGA 
---->
+	Eg: 
 
-Eg: 
+	TCGA-AB-2802    ANKRD30A        C20orf24        C6orf10 
+	TCGA-AB-2803    ABCC1   ASMTL   CACNA1S CC2D2A 
+	TCGA-AB-2804    ALLC    ATP2A2  C10orf68
 
-TCGA-AB-2802    ANKRD30A        C20orf24        C6orf10 
-TCGA-AB-2803    ABCC1   ASMTL   CACNA1S CC2D2A 
-TCGA-AB-2804    ALLC    ATP2A2  C10orf68
 
+3. Weights
 
 
 ## Two files
