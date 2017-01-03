@@ -4,7 +4,7 @@ The input files can be organized in two formats.
 
 ## Three files
 
-### Interaction Network
+1. Interaction Network
 
   
 The example data are taken from the hippie_current.txt: 
@@ -43,7 +43,7 @@ on March 7, 2015 from Fabio (see /home/data on server)
 
 
 
-### Mutations
+2. Mutations
 
 The example is taken from TGCA pancancer project, obtained from
 processing of MAFs from
@@ -67,7 +67,7 @@ TCGA-AB-2804    ALLC    ATP2A2  C10orf68
 
 ## Two files
 
-- A file containing indication of the gene interaction network.  The
+1. A file containing indication of the gene interaction network.  The
   network is obtained by preprocessing a protein interaction network as
   follows. Two genes are connected if there is at least a pair of
   proteins that contain them and that are interacting.  The gene
@@ -92,7 +92,7 @@ TCGA-AB-2804    ALLC    ATP2A2  C10orf68
 
 
 
-- A file for the coverage network. The format is similar to the one at
+2. A file for the coverage network. The format is similar to the one at
   http://cbio.mskcc.org/cancergenomics/pancan_tcga/
 
   The file contains a collection of adjacency lists, one per row. Each
@@ -117,7 +117,7 @@ TCGA-AB-2804    ALLC    ATP2A2  C10orf68
   and not present in the interactions file will be ignored.
     
   
-- weight file. This file is optional. It contains a list of weights
+3. weight file. This file is optional. It contains a list of weights
   indicating the importance of genes and/or edges. Weights must be from
   the interval [0,1].
 
