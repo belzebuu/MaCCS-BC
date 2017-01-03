@@ -46,7 +46,6 @@ Note that gene weights are optional. If a file containing a list of weights for 
 is not given, then it is assumed that all genes have weight 1.
 
 
-
 For a  list of options:
 
 ``` bash

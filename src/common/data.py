@@ -8,8 +8,8 @@ import pprint
 
 
 class Data:
-    def __init__(self, nodes=None, patients=None, mutations=None, interactions=None,
-                 node_mutations=None, node_neighbors=None):
+    def __init__(self):
+        #nodes=None, patients=None, mutations=None, interactions=None, node_mutations=None, node_neighbors=None):
         """
         :param nodes: ([str])                   gene nodes
         :param patients: ([str])                patient ids
@@ -24,14 +24,22 @@ class Data:
         self.mutation_file = None
         self.weight_file = None
         
-        self.nodes = list() if nodes is None else nodes
-        self.patients = list() if patients is None else patients
-        self.interactions = tuplelist([]) if interactions is None else interactions
-        self.mutations = tuplelist([]) if mutations is None else mutations
+        self.nodes = list() # if nodes is None else nodes
+        self.patients = list() # if patients is None else patients
+        #self.interactions = tuplelist([]) if interactions is None else interactions
+        #self.mutations = tuplelist([]) if mutations is None else mutations
+
+        # interactions are included twice, once in each direction
+        self.interactions = list() # if interactions is None else interactions
+        # mutations are included once, in the direction patient to gene
+        self.mutations = list() # if mutations is None else mutations
+
 
         # auxiliary data structures
-        self.node_mutations = OrderedDict() if node_mutations is None else node_mutations
-        self.node_neighbors = OrderedDict() if node_neighbors is None else node_neighbors
+        self.node_neighbors = OrderedDict() # if node_neighbors is None else node_neighbors
+        self.mutated_patients = OrderedDict() # if node_mutations is None else node_mutations
+        self.mutated_genes = OrderedDict() # if node_mutations is None else node_mutations
+
         self.weights = dict()
 
     def __str__(self):
@@ -41,8 +49,13 @@ class Data:
         m += "Interaction file: \'%s\', Mutation file: \'%s\'\n" % (self.interaction_file, self.mutation_file)
         if self.weight_file:
             m += "Weight file: \'%s\'," % (self.weight_file)
-        m += "Genes: %d, Interactions: %d, Patients: %d, Mutations: %d"\
-               % (len(self.nodes), len(self.interactions), len(self.patients), len(self.mutations))
+        m += "Genes: %d, Interactions: %d, Patients: %d,"\
+               % (len(self.nodes), len(self.interactions), len(self.patients))
+        m += " Mutations: %d, Mutated (given) genes: %d," % (len(self.mutations), len(self.mutated_patients))
+        if len(self.weights)>1:
+            m += " Weights: %d" % ( len(self.weights))
+        else:
+            m+=" Unweighted"
         return m
 
     # READ IN DATA
@@ -50,16 +63,16 @@ class Data:
         self.interaction_file = interaction_file
         self.mutation_file = mutation_file
 
-        used_genes = set()
+        given_genes = set()
 
         with open(interaction_file) as inf:
             for line in inf:
                 node_a, node_b = line.split()
-                used_genes.add(node_a)
-                used_genes.add(node_b)
+                given_genes.add(node_a)
+                given_genes.add(node_b)
                 # add interaction
                 self.append_interaction(node_a, node_b)
-        self.nodes = list(used_genes)
+        self.nodes = list(given_genes)
 
         with open(mutation_file) as mf:
             for line in mf:
@@ -71,12 +84,15 @@ class Data:
                     print "Patient "+patient+" repeated."
                 #patient_added = False
                 for g_node in fields[1:]:
-                    if g_node in used_genes:
+                    if g_node in given_genes:
                         # add patient
                         #if not patient_added:
                         #patient_added = True
                         self.append_mutation(patient, g_node)
-
+            if len(self.patients) > len(self.mutated_genes.keys()):
+                print "Discarded %d patients because mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))
+                del self.patients
+                self.patients = self.mutated_genes.keys()
 
         if weight_file:
             with open(weight_file) as wf:
@@ -85,7 +101,7 @@ class Data:
                     if not float(weight) == 0.0:
                         self.weights[g_node] = float(weight)
         print self
-        sys.exit(0)
+
 
     # READ IN DATA
     def from_three_files(self, gene_file, interaction_file, mutation_file, weight_file=None):
@@ -97,11 +113,11 @@ class Data:
         self.interaction_file = interaction_file
         self.mutation_file = mutation_file
         
-        used_genes = set()
-        used_nodes = set()
+        given_genes = set()
+        #given_labels = set()
 
         gene_node = {}
-        node_gene = {}
+        label_gene = {}
 
         with open(gene_file) as gf:
             for line in gf:
@@ -110,33 +126,42 @@ class Data:
                 #     # print g
                 #     continue
                 n = n_str
-                used_genes.add(g)
-                used_nodes.add(n)
+                given_genes.add(g)
+                #given_labels.add(n)
                 if g in gene_node:
                     gene_node[g].append(n)
                 else:
                     gene_node[g] = [n]
                     
-                if n in node_gene:
-                    node_gene[n].append(g)
+                if n in label_gene:
+                    label_gene[n].append(g)
                 else:
-                    node_gene[n] = [g]
+                    label_gene[n] = [g]
 
-        self.nodes = list(used_genes)
+        self.nodes = list(given_genes)
 
-        pprint.pprint(node_gene)
+
+        if False: # check relation:
+            # Each protein has one gene only
+            for a in label_gene:
+                if len(label_gene[a])>1:
+                    print(a,label_gene[a])
+
+            # A gene can be in more than one protein
+            for b in gene_node:
+                if len(gene_node[b])>1:
+                    print(b,gene_node[b])
 
         with open(interaction_file) as inf:
             for line in inf:
                 a_str, b_str, c = line.split()
                 a = a_str
                 b = b_str
-                if a in node_gene and b in node_gene:
-                    # self.append_interaction(node_gene[a][0], node_gene[b][0])
-                    for x in node_gene[a]:
-                        for y in node_gene[b]:
+                if a in label_gene and b in label_gene:
+                    # self.append_interaction(label_gene[a][0], label_gene[b][0])
+                    for x in label_gene[a]:
+                        for y in label_gene[b]:
                             self.append_interaction(x, y)
-
 
 
         # patients = list()
@@ -150,10 +175,17 @@ class Data:
                 patient = fields[0]
                 if patient not in self.patients:
                     self.patients.append(patient)
+                else:
+                    print "Patient "+patient+" repeated"
+                if len(fields)==1:
+                    print patient
                 for gene in fields[1:]:
-                    if gene in used_genes:
+                    if gene in given_genes:
                         self.append_mutation(patient, gene)
-                        
+            if len(self.patients) > len(self.mutated_genes.keys()):
+                print "Discarded %d patients because mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))                
+                del self.patients
+                self.patients = self.mutated_genes.keys()
 
         if weight_file:
             max_weight = 0.0
@@ -181,32 +213,50 @@ class Data:
         print self
         #        print self.nodes
         #print self.patients
-        sys.exit(0)
 
 
 
-    # # # HELPER FUNCTIONS
-    # done
+    # HELPER FUNCTIONS
     def append_interaction(self, node_a, node_b):
-        self.interactions.append((node_a, node_b))
+        #if (node_a, node_b) not in self.interactions:
+        #self.interactions.append((node_a, node_b))
+        #if (node_b, node_a) not in self.interactions:
+        #self.interactions.append((node_b, node_a))
+
         if node_a in self.node_neighbors:
-            self.node_neighbors[node_a].add(node_b)
+            if node_b not in self.node_neighbors[node_a]:
+                self.interactions.append((node_a, node_b))
+                self.node_neighbors[node_a].add(node_b)
         else:
+            self.interactions.append((node_a, node_b))
             self.node_neighbors[node_a] = {node_b}
         if node_b in self.node_neighbors:
-            self.node_neighbors[node_b].add(node_a)
+            if node_a not in self.node_neighbors[node_b]:
+                self.interactions.append((node_b, node_a))
+                self.node_neighbors[node_b].add(node_a)
         else:
+            self.interactions.append((node_b, node_a))
             self.node_neighbors[node_b] = {node_a}
+        #pprint.pprint(self.interactions)
 
-    # done
+    
     def append_mutation(self, patient, g_node):
-        self.mutations.append((patient, g_node))
-        if g_node in self.node_mutations:
-            self.node_mutations[g_node].add(patient)
+        #if (patient, g_node) not in self.mutations:
+        if g_node in self.mutated_patients:
+            if patient not in self.mutated_patients[g_node]:
+                self.mutations.append((patient, g_node))
+                self.mutated_patients[g_node].add(patient)
         else:
-            self.node_mutations[g_node] = {patient}
+            self.mutations.append((patient, g_node))
+            self.mutated_patients[g_node] = {patient}
 
-    # # # SHUFFLE
+        if patient in self.mutated_genes:
+            self.mutated_genes[patient].add(g_node)
+        else:
+            self.mutated_genes[patient] = {g_node}
+            
+
+    # SHUFFLE
     def permute_mutations(self, seed):
         print "shuffling keys"
         original = copy.deepcopy(self)
@@ -217,14 +267,15 @@ class Data:
         random.shuffle(keys)
         shuffled_dictionary = dict(zip(keys, index_dictionary.values()))
 
-        self.mutations = tuplelist()
-        self.interactions = tuplelist()
-        self.node_mutations = OrderedDict()
+        self.mutations = list()
+        self.interactions = list()
+        self.mutated_patients = OrderedDict()
+        self.mutated_genes = OrderedDict()
         self.node_neighbors = OrderedDict()
 
         for n in original.nodes:
-            if n in original.node_mutations:
-                for p in original.node_mutations[n]:
+            if n in original.mutated_patients:
+                for p in original.mutated_patients[n]:
                     self.append_mutation(p, shuffled_dictionary[n])
             for u in original.node_neighbors[n]:
                 self.append_interaction(shuffled_dictionary[n], shuffled_dictionary[u])

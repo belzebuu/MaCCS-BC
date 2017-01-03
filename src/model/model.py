@@ -190,7 +190,7 @@ class Solver:
         # constraints either satisfied or y = 0
         for j in self.data.patients:
             m.addConstr(
-                (1 - y[j] + quicksum(x[i] for _, i in self.data.mutations.select(j, '*'))) >= 1
+                (1 - y[j] + quicksum(x[i] for i in self.data.mutated_genes[j])) >= 1
             )
 
         print "Constraints posted"
@@ -263,7 +263,7 @@ class Solver:
             j_links = 0
             covering_indices[j] = list()
             z[j] = list()
-            for (_, i) in self.data.mutations.select(j, '*'):
+            for i in self.data.mutated_genes[j]:
                 covering_indices[j].append(i)
                 j_links += 1
                 z[j].append(m.addVar(lb=0, ub=1, vtype=GRB.BINARY, name="z" + str(j) + "," + str(i)))
