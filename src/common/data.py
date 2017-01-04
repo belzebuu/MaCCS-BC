@@ -78,6 +78,8 @@ class Data:
                 self.append_interaction(node_a, node_b)
         self.nodes = list(given_genes)
 
+        seen_genes = set()
+
         with open(mutation_file) as mf:
             for line in mf:
                 fields = line.split()
@@ -88,15 +90,18 @@ class Data:
                     print "Patient "+patient+" repeated."
                 #patient_added = False
                 for g_node in fields[1:]:
+                    seen_genes.add(g_node)
                     if g_node in given_genes:
                         # add patient
                         #if not patient_added:
                         #patient_added = True
                         self.append_mutation(patient, g_node)
             if len(self.patients) > len(self.mutated_genes.keys()):
-                print "Discarded %d patients because mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))
+                print "Discarded %d patients because they contain only mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))
                 del self.patients
                 self.patients = self.mutated_genes.keys()
+            if len(seen_genes) != len(given_genes):
+                print "Genes in mutations %d and given %d" % (len(seen_genes), len(given_genes))
 
         if weight_file:
             with open(weight_file) as wf:

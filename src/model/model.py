@@ -34,7 +34,7 @@ class Solver:
                 print "single component"
                 self.components = components[0]
             else:
-                print "%d components" % (len(components)
+                print "%d components" % (len(components))
 
 
         objective, solution_set, termination_indicator = 0, set(), 0
@@ -42,20 +42,18 @@ class Solver:
 
         for component in components:
             self.data = component
-                model, variables = self.define_model()
-                obj, sol, ti = self.solve_model(model, variables)
+            model, variables = self.define_model()
+            obj, sol, ti = self.solve_model(model, variables)
 
-                if obj > objective or (self.mode == constants.MODE_VERSUS and ti > termination_indicator):
-                    objective = obj
-                    solution_set = sol
-                    termination_indicator = ti
-                    main_model = model
-                    main_variables = variables
+            if obj > objective or (self.mode == constants.MODE_VERSUS and ti > termination_indicator):
+                objective = obj
+                solution_set = sol
+                termination_indicator = ti
+                main_model = model
+                main_variables = variables
 
-        main_model, main_variables = self.define_model()
-        objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
-
-
+        #main_model, main_variables = self.define_model()
+        #objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
 
 
         if self.mode == constants.MODE_SOLVE:
