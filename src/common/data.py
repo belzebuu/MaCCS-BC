@@ -37,7 +37,7 @@ class Data:
 
         # auxiliary data structures
         self.node_neighbors = OrderedDict() # if node_neighbors is None else node_neighbors
-        self.mutated_patients = OrderedDict() # if node_mutations is None else node_mutations
+        self.coverage = OrderedDict() # if node_mutations is None else node_mutations
         self.mutated_genes = OrderedDict() # if node_mutations is None else node_mutations
 
         self.weights = dict()
@@ -55,7 +55,7 @@ class Data:
             m += "Weight file: \'%s\'," % (self.weight_file)
         m += "Genes: %d, Interactions: %d, Patients: %d,"\
                % (len(self.nodes), len(self.interactions), len(self.patients))
-        m += " Mutations: %d, Mutated (given) genes: %d," % (len(self.mutations), len(self.mutated_patients))
+        m += " Mutations: %d, Mutated (given) genes: %d," % (len(self.mutations), len(self.coverage))
         if len(self.weights)>1:
             m += " Weights: %d" % ( len(self.weights))
         else:
@@ -251,13 +251,13 @@ class Data:
     
     def append_mutation(self, patient, g_node):
         #if (patient, g_node) not in self.mutations:
-        if g_node in self.mutated_patients:
-            if patient not in self.mutated_patients[g_node]:
+        if g_node in self.coverage:
+            if patient not in self.coverage[g_node]:
                 self.mutations.append((patient, g_node))
-                self.mutated_patients[g_node].add(patient)
+                self.coverage[g_node].add(patient)
         else:
             self.mutations.append((patient, g_node))
-            self.mutated_patients[g_node] = {patient}
+            self.coverage[g_node] = {patient}
 
         if patient in self.mutated_genes:
             self.mutated_genes[patient].add(g_node)
@@ -278,13 +278,13 @@ class Data:
 
         self.mutations = list()
         self.interactions = list()
-        self.mutated_patients = OrderedDict()
+        self.coverage = OrderedDict()
         self.mutated_genes = OrderedDict()
         self.node_neighbors = OrderedDict()
 
         for n in original.nodes:
-            if n in original.mutated_patients:
-                for p in original.mutated_patients[n]:
+            if n in original.coverage:
+                for p in original.coverage[n]:
                     self.append_mutation(p, shuffled_dictionary[n])
             for u in original.node_neighbors[n]:
                 self.append_interaction(shuffled_dictionary[n], shuffled_dictionary[u])

@@ -5,7 +5,7 @@ from collections import OrderedDict
 import networkx as nx
 import copy
 import data as d
-
+import itertools
 
 class Preprocess:
     def __init__(self):
@@ -77,10 +77,11 @@ class Preprocess:
 
     # # # PREPROCESS
     # done
-    def make_graph(self, data):
+    @staticmethod
+    def make_graph(nodes, interactions):
         graph = nx.Graph()
-        graph.add_nodes_from(data.nodes)
-        for [u, w] in data.interactions:
+        graph.add_nodes_from(nodes)
+        for [u, w] in interactions:
             graph.add_edge(u, w)
         return graph
 
@@ -89,16 +90,22 @@ class Preprocess:
     def preprocess(cls, data, k):
         if data.weights:
             return cls.preprocess_with_weights(k)
+        del data.components
+        data.components = list()
+        
         data_components = list()
         small_components = set()
-        g = self.make_graph(data)
+        g = cls.make_graph(data.nodes, data.interactions)
         components = nx.connected_components(g)
 
-        for c in components:
 
+
+        for c in components:
             if len(c) < k:
                 small_components |= set(c)
+                print "Removed component %d" % (len(c)) 
                 continue
+            
 
             nodes_to_remove = set()
             nodes_degree_one = set()
@@ -109,52 +116,70 @@ class Preprocess:
 	    # data_components.append(self.data_from_nodelist(data, c, {'8152'}))
 	    # return data_components
 	    # TEST
-            for i in c:
-                if i in data.node_mutations:
-                    for u in c:
-                        if u in data.node_mutations and i != u:
-                            if data.node_neighbors[i] <= data.node_neighbors[u]\
-                                    and data.node_mutations[i] <= data.node_mutations[u]:
-                                # 4: node u strictly "better"
-                                if data.node_neighbors[i] != data.node_neighbors[u] \
-                                        or data.node_mutations[i] != data.node_mutations[u]:
-                                    nodes_covering_less.add(i)
-                                    break
-                                # 5: u at least as good and with smaller index
-                                elif u < i:
-                                    nodes_covering_less.add(i)
-                                    break
-                else:
-                    # 1: nodes of degree 1 not covering any patients
-                    if len(data.node_neighbors[i]) == 1:
-                        nodes_degree_one.add(i)
-                    else:
-                        for u in c:
-                            if data.node_neighbors[i] <= data.node_neighbors[u]:
-                                if u in data.node_mutations:
-                                    # 3: more useful (covering) node that also connects nodes
-                                    nodes_noncovering.add(i)
-                                    break
-                                elif data.node_neighbors[i] != data.node_neighbors[u] or u < i:
-                                    # 2: another, smaller index node that has same neighbors, and covers nothing
-                                    nodes_noncovering.add(i)
-                                    break
 
-            print "before, in component : %d " % len(c)
-            print "degree 1, no cover: %d " % len(nodes_degree_one)
-            print "exists better node: %d " % len(nodes_covering_less)
-            print "no cover, same nbs: %d " % len(nodes_noncovering)
-            print "small components:   %d " % len(small_components)
-            nodes_to_remove |= small_components
-            nodes_to_remove |= nodes_degree_one
+            cover_len = {}
+            for gene in c:
+                # Rule I: nodes of degree 1 not covering any patients
+                if gene not in data.coverage:
+                    if len(data.node_neighbors[gene]) == 1:
+                        nodes_degree_one.add(gene)                
+                else:
+                    cover_len[gene]=len(data.coverage[gene])
+            #nodes_to_remove |= nodes_degree_one            
+
+            print "Removal due to Rule I (not covering + degree 1): %d " % len(nodes_degree_one)
+            c -= nodes_degree_one
+
+            c_prime = set(cover_len.keys())
+            not_covering = c - c_prime
+
+            for (g1,g2) in itertools.combinations(c_prime,2):
+                # Rule III: remove i if exists u that has superset of coverage and of neighbors
+                # if cover_len[g1]>0 and cover_len[g2]>0: # they cover at least one patient
+                if cover_len[g1] == cover_len[g2] and len(data.node_neighbors[g1]) == len(data.node_neighbors[g2]) \
+                       and data.coverage[g1] == data.coverage[g2] and data.node_neighbors[g1] == data.node_neighbors[g2]:
+                    nodes_covering_less.add(g1)
+                elif cover_len[g1] <= cover_len[g2] and len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2])\
+                         and data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                    nodes_covering_less.add(g1)
+                elif cover_len[g2] <= cover_len[g1] and len(data.node_neighbors[g2]) <= len(data.node_neighbors[g1])\
+                     and data.coverage[g2] <= data.coverage[g1] and data.node_neighbors[g2] <= data.node_neighbors[g1]:
+                    nodes_covering_less.add(g2)
+
+            # Rule II. remove i if it does not cover anything and there is u that has a superset of neighbors
+            for (g1,g2) in itertools.combinations(not_covering,2):                
+                if data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                    nodes_noncovering.add(g1)
+                elif data.node_neighbors[g2] <= data.node_neighbors[g1]:
+                    nodes_noncovering.add(g2)
+
+            for g1 in not_covering:
+                for g2 in c_prime:
+                    if data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                        nodes_noncovering.add(g1)
+
+
+            #print "before, in component : %d " % len(c)
+            print "Removal due to Rule II (not covering and exists node with superset of neighbors): %d " % len(nodes_covering_less)
+            print "Removal due to Rule III (exists node with superset of neighbors and coverage): %d " % len(nodes_noncovering)
+            #print "small components:   %d " % len(small_components)
+        
+
             nodes_to_remove |= nodes_covering_less
             nodes_to_remove |= nodes_noncovering
-            print "all nodes to remove: %d " % len(nodes_to_remove)
-            if len(c) - len(nodes_to_remove) >= k:
+            # print "all nodes to remove: %d " % len(nodes_to_remove)
+            #if len(c) - len(nodes_to_remove) >= k:
                 # nodes_to_keep = [x for x in c if x not in nodes_to_remove]
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
-                data_components.append(self.data_from_nodelist(data, c, nodes_to_remove))
-        return data_components
+            #    data_components.append(self.data_from_nodelist(data, c, nodes_to_remove))
+
+            print len(c),len(nodes_to_remove)
+            c -= nodes_to_remove
+            print len(c)
+  
+                
+
+
 
     # done
     def data_from_nodelist(self, data, all_nodes, nodes_to_remove=set(), weights=None):

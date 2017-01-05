@@ -28,7 +28,7 @@ class Solver:
         if self.preprocessing:
             print "Preprocessing instance..."            
             #preprocess = p.Preprocess()
-            components = Preprocess.preprocess(self.data, self.k)
+            components = p.Preprocess.preprocess(self.data, self.k)
 
             if len(components) == 1:
                 print "single component"
