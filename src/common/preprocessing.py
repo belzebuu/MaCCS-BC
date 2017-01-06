@@ -5,7 +5,7 @@ from collections import OrderedDict
 import networkx as nx
 import copy
 import data as d
-
+from time import time 
 
 class Preprocess:
     def __init__(self):
@@ -92,6 +92,7 @@ class Preprocess:
         g = self.make_graph(data)
         components = nx.connected_components(g)
 
+	start_time= time()
         for c in components:
 
             if len(c) < k:
@@ -148,10 +149,12 @@ class Preprocess:
             nodes_to_remove |= nodes_covering_less
             nodes_to_remove |= nodes_noncovering
             print "all nodes to remove: %d " % len(nodes_to_remove)
+            
             if len(c) - len(nodes_to_remove) >= k:
                 # nodes_to_keep = [x for x in c if x not in nodes_to_remove]
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
                 data_components.append(self.data_from_nodelist(data, c, nodes_to_remove))
+        print 'Execution finished in %.3f seconds' % (time() - start_time)	
         return data_components
 
     # done
