@@ -1,4 +1,5 @@
 #!/usr/bin/python
+from __future__ import print_function
 from gurobipy import *
 import model.model as model
 import argparse
@@ -29,8 +30,8 @@ def main(args):
                               args.exclusive, args.verbose, args.time_limit, args.preprocessing,
                               data)
         objective, solution_set, _, result = solver.solve()
-        print result
-        print 'Execution finished in %.3f seconds' % (time() - start_time)
+        print(result)
+        print('Execution finished in %.3f seconds' % (time() - start_time))
 
         if solution_set and args.output_file is not None:
             solution_saver = cr.Solution(mode, args.output_file, data, args.exclusive)
@@ -40,8 +41,7 @@ def main(args):
                 solution_saver.write_solution(objective, solution_set)
                 
     except GurobiError as e:
-            print "Error %d" % e.errno
-            print e.message
+            print("Error %d: %s" % (e.errno, e.message))
 
 
 if __name__ == "__main__":

@@ -1,3 +1,4 @@
+from __future__ import print_function
 import sys
 from gurobipy import tuplelist
 import random
@@ -5,7 +6,7 @@ from collections import OrderedDict
 import networkx as nx
 import copy
 import data as d
-import itertools
+from time import time
 
 class Preprocess:
     def __init__(self):
@@ -24,11 +25,12 @@ class Preprocess:
                 small_components |= {c}
                 continue
 
-            print "connected component"
+            print("connected component")
             nodes_to_remove = set()
             nodes_degree_one = set()
             nodes_covering_less = set()
             nodes_noncovering = set()
+
 
             for i in c:
                 if i in small_components:
@@ -59,16 +61,16 @@ class Preprocess:
                                     nodes_noncovering.add(i)
                                     break
 
-            print "before, in component : %d " % len(c)
-            print "degree 1, no cover: %d " % len(nodes_degree_one)
-            print "exists better node: %d " % len(nodes_covering_less)
-            print "no cover, same nbs: %d " % len(nodes_noncovering)
-            print "small components:   %d " % len(small_components)
+            print("before, in component : %d " % len(c))
+            print("degree 1, no cover: %d " % len(nodes_degree_one))
+            print("exists better node: %d " % len(nodes_covering_less))
+            print("no cover, same nbs: %d " % len(nodes_noncovering))
+            print("small components:   %d " % len(small_components))
             nodes_to_remove |= small_components
             nodes_to_remove |= nodes_degree_one
             nodes_to_remove |= nodes_covering_less
             nodes_to_remove |= nodes_noncovering
-            print "all nodes to remove: %d " % len(nodes_to_remove)
+            print("all nodes to remove: %d " % len(nodes_to_remove))
             if len(c) - len(nodes_to_remove) >= k:
                 # # nodes_to_keep = [x for x in c if x not in nodes_to_remove]
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
@@ -99,18 +101,19 @@ class Preprocess:
         components = nx.connected_components(g)
 
 
-
+        start_time = time()
         for c in components:
+            print(len(c))
             if len(c) < k:
                 small_components |= set(c)
-                print "Removed component %d" % (len(c)) 
+                print("Removed component %d" % (len(c)) )
                 continue
             
 
-            nodes_to_remove = set()
-            nodes_degree_one = set()
-            nodes_covering_less = set()
-            nodes_noncovering = set()
+            nodes_to_remove = list()
+            nodes_degree_one = list()
+            nodes_covering_less = list()
+            nodes_noncovering = list()
 
 	    # TEST
 	    # data_components.append(self.data_from_nodelist(data, c, {'8152'}))
@@ -118,66 +121,110 @@ class Preprocess:
 	    # TEST
 
             cover_len = {}
+            uncovering = list()
+            uncovering_after_removal = list()
+            
             for gene in c:
                 # Rule I: nodes of degree 1 not covering any patients
                 if gene not in data.coverage:
                     if len(data.node_neighbors[gene]) == 1:
-                        nodes_degree_one.add(gene)                
+                        nodes_degree_one.append(gene)                
+                    else:
+                        uncovering.append(gene)
                 else:
                     cover_len[gene]=len(data.coverage[gene])
+
             #nodes_to_remove |= nodes_degree_one            
 
-            print "Removal due to Rule I (not covering + degree 1): %d " % len(nodes_degree_one)
-            c -= nodes_degree_one
+            print("Removals due to Rule I (not covering & degree 1): %d " % len(nodes_degree_one))
+            nodes_to_remove.append(nodes_degree_one)
 
-            c_prime = set(cover_len.keys())
-            not_covering = c - c_prime
+            covering = list(cover_len.keys())
+            covering_after_removal = list()
+            #for (g1,g2) in itertools.combinations(cover_len.keys(), 2):
+            
+            print("Removals due to Rule II (not covering and exists node with superset of neighbors): ", end="")
+            sys.stdout.flush() # TODO from Python 3.5 the argument flush can go in print
 
-            for (g1,g2) in itertools.combinations(c_prime,2):
-                # Rule III: remove i if exists u that has superset of coverage and of neighbors
-                # if cover_len[g1]>0 and cover_len[g2]>0: # they cover at least one patient
-                if cover_len[g1] == cover_len[g2] and len(data.node_neighbors[g1]) == len(data.node_neighbors[g2]) \
-                       and data.coverage[g1] == data.coverage[g2] and data.node_neighbors[g1] == data.node_neighbors[g2]:
-                    nodes_covering_less.add(g1)
-                elif cover_len[g1] <= cover_len[g2] and len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2])\
-                         and data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
-                    nodes_covering_less.add(g1)
-                elif cover_len[g2] <= cover_len[g1] and len(data.node_neighbors[g2]) <= len(data.node_neighbors[g1])\
-                     and data.coverage[g2] <= data.coverage[g1] and data.node_neighbors[g2] <= data.node_neighbors[g1]:
-                    nodes_covering_less.add(g2)
-
+            ################################################################################
             # Rule II. remove i if it does not cover anything and there is u that has a superset of neighbors
-            for (g1,g2) in itertools.combinations(not_covering,2):                
-                if data.node_neighbors[g1] <= data.node_neighbors[g2]:
-                    nodes_noncovering.add(g1)
-                elif data.node_neighbors[g2] <= data.node_neighbors[g1]:
-                    nodes_noncovering.add(g2)
+            #for (g1,g2) in itertools.combinations(uncovering, 2):                
+            for i in range(len(uncovering)-1):
+                g1 = uncovering[i]
+                uncovering_after_removal.append(g1)
+                for j in range(i+1,len(uncovering)):          
+                    g2 = uncovering[j]
+                    if len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2]):
+                        if data.node_neighbors[g1] <= data.node_neighbors[g2]:                        
+                            nodes_noncovering.append(g1)
+                            uncovering_after_removal.pop()
+                            break
 
-            for g1 in not_covering:
-                for g2 in c_prime:
-                    if data.node_neighbors[g1] <= data.node_neighbors[g2]:
-                        nodes_noncovering.add(g1)
+            
+            for i in range(len(uncovering_after_removal)-1):
+                g2 = uncovering[i]
+                for j in range(i+1,len(uncovering_after_removal)):          
+                    g1 = uncovering[j]
+                    if len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2]):
+                        if data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                            nodes_noncovering.append(g1)
+                            break
 
+            for g1 in uncovering:
+                for g2 in cover_len.keys():
+                    if len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2]):
+                        if data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                            nodes_noncovering.append(g1)
+                            break
+
+            print("%d " % len(nodes_noncovering))
+
+            ################################################################################
+            print("Removals due to Rule III (exists node with superset of neighbors and coverage): ",end="")
+            sys.stdout.flush()
+            for i in range(len(covering)-1):
+                g1 = covering[i]
+                for j in range(i+1,len(covering)):          
+                    g2 = covering[j]
+                    # Rule III: remove i if exists u that has superset of coverage and of neighbors
+                    # if cover_len[g1]>0 and cover_len[g2]>0: # they cover at least one patient
+                    if cover_len[g1] == cover_len[g2] and len(data.node_neighbors[g1]) == len(data.node_neighbors[g2]) \
+                           and data.coverage[g1] == data.coverage[g2] and data.node_neighbors[g1] == data.node_neighbors[g2]:
+                        nodes_covering_less.append(g1)
+                        break
+                    elif cover_len[g1] <= cover_len[g2] and len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2])\
+                             and data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                        nodes_covering_less.append(g1)
+                        break
+                covering_after_removal.append(g1)
+                
+            for i in range(len(covering_after_removal)-1):
+                g2 = covering_after_removal[i]                 
+                for j in range(i+1,len(covering_after_removal)):          
+                    g1 = covering_after_removal[j]
+                    if cover_len[g1] <= cover_len[g2] and len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2])\
+                           and data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                        nodes_covering_less.append(g1)
+                        break
 
             #print "before, in component : %d " % len(c)
-            print "Removal due to Rule II (not covering and exists node with superset of neighbors): %d " % len(nodes_covering_less)
-            print "Removal due to Rule III (exists node with superset of neighbors and coverage): %d " % len(nodes_noncovering)
+            print(" %d " % len(nodes_covering_less))
+
             #print "small components:   %d " % len(small_components)
         
 
-            nodes_to_remove |= nodes_covering_less
-            nodes_to_remove |= nodes_noncovering
+            nodes_to_remove.append(nodes_covering_less)
+            nodes_to_remove.append(nodes_noncovering)
             # print "all nodes to remove: %d " % len(nodes_to_remove)
             #if len(c) - len(nodes_to_remove) >= k:
                 # nodes_to_keep = [x for x in c if x not in nodes_to_remove]
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
             #    data_components.append(self.data_from_nodelist(data, c, nodes_to_remove))
 
-            print len(c),len(nodes_to_remove)
-            c -= nodes_to_remove
-            print len(c)
-  
-                
+            print(len(nodes_to_remove))
+        print('Execution finished in %.3f seconds' % (time() - start_time))
+        sys.exit(0)
+        return True
 
 
 
@@ -186,7 +233,7 @@ class Preprocess:
         if not nodes_to_remove:
             return self
         new_data = d.Data()
-        print new_data
+        print(new_data)
         # sys.exit(0)
         component_patient_set = set()
         for i in all_nodes:
