@@ -116,7 +116,7 @@ class Preprocess:
 	    # return data_components
 	    # TEST
             ################################################################################
-            cover_len = {}
+            covering = list()
             uncovering = list()
             nodes_degree_one = list()
                         
@@ -128,7 +128,7 @@ class Preprocess:
                     else:
                         uncovering.append(gene)
                 else:
-                    cover_len[gene]=len(data.coverage[gene])
+                    covering.append(gene)
 
             #nodes_to_remove |= nodes_degree_one            
 
@@ -136,16 +136,16 @@ class Preprocess:
             nodes_to_remove += nodes_degree_one
 
             uncovering.sort(key=lambda x: len(data.node_neighbors[x]) )
-            covering = list(cover_len.keys())
-            covering.sort(key=lambda x: cover_len[x] )
+            covering.sort(key=lambda x: (len(data.node_neighbors[x]),len(data.coverage[x])) )
             
             #for (g1,g2) in itertools.combinations(cover_len.keys(), 2):
-
+            
             ################################################################################
             print("Removals due to Rule II (not covering and exists node with superset of neighbors): ", end="")
             sys.stdout.flush() # TODO from Python 3.5 the argument flush can go in print
             nodes_noncovering = list()
             # Rule II. remove i if it does not cover anything and there is u that has a superset of neighbors            
+            # We use the fact that they are sorted by neighbors
             for g2 in covering:
                 for i in range(len(uncovering)):
                     g1 = uncovering[i]
@@ -155,7 +155,7 @@ class Preprocess:
                     if data.node_neighbors[g1] <= data.node_neighbors[g2]:
                         nodes_noncovering.append(g1)
                         uncovering[i] = -1
-
+            
             for i in range(len(uncovering)-1):
                 g1 = uncovering[i]
                 if g1 < 0: continue
@@ -167,8 +167,8 @@ class Preprocess:
                         nodes_noncovering.append(g1)
                         uncovering[i]=-1
                         break
-
-
+            
+            
             #for i in range(len(uncovering)-1):
             #    g2 = uncovering[i]
             #    if g2 < 0: continue
@@ -179,10 +179,9 @@ class Preprocess:
             #            if data.node_neighbors[g1] <= data.node_neighbors[g2]:
             #                nodes_noncovering.append(g1)
             #                break
-
-
+            
+            
             print("%d " % len(nodes_noncovering))
-            print("%d " % len(set(nodes_noncovering)))
             nodes_to_remove += nodes_noncovering
 
 
@@ -192,15 +191,18 @@ class Preprocess:
             nodes_covering_less = list()
             # Rule III: remove i if exists u that has superset of coverage and of neighbors
             # if cover_len[g1]>0 and cover_len[g2]>0: # they cover at least one patient
-
+            # we use the fact that they are sorted
             for i in range(len(covering)-1):
                 g1 = covering[i]
                 for j in range(i+1,len(covering)):
                     g2 = covering[j]
-                    if len(data.node_neighbors[g1]) > len(data.node_neighbors[g2]): continue
-                    if data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
+                    if len(data.coverage[g1]) > len(data.coverage[g2]): continue                  
+                    if  data.node_neighbors[g1] <= data.node_neighbors[g2] and data.coverage[g1] <= data.coverage[g2]:
                         nodes_covering_less.append(g1)
                         break
+                    #elif len(data.node_neighbors[g1]) > len(data.node_neighbors[g2]):
+                    #        if data.node_neighbors[g2] <= data.node_neighbors[g1]:
+                    #            nodes_covering_less.append(g2)
                     #elif cover_len[g1] <= cover_len[g2] and len(data.node_neighbors[g1]) <= len(data.node_neighbors[g2])\
                     #         and data.coverage[g1] <= data.coverage[g2] and data.node_neighbors[g1] <= data.node_neighbors[g2]:
                     #    nodes_covering_less.append(g1)
@@ -221,10 +223,8 @@ class Preprocess:
 
             #print "before, in component : %d " % len(c)
             print(" %d " % len(nodes_covering_less))
-            print(" %d " % len(set(nodes_covering_less)))
 
             #print "small components:   %d " % len(small_components)
-            print(nodes_covering_less)
 
             nodes_to_remove += nodes_covering_less
 
@@ -235,7 +235,6 @@ class Preprocess:
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
             #    data_components.append(self.data_from_nodelist(data, c, nodes_to_remove))
 
-            print(len(nodes_to_remove))
         print('Execution finished in %.3f seconds' % (time() - start_time))
         sys.exit(0)
         return True
