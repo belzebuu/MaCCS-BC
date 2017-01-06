@@ -149,7 +149,7 @@ class Preprocess:
             nodes_to_remove |= nodes_covering_less
             nodes_to_remove |= nodes_noncovering
             print "all nodes to remove: %d " % len(nodes_to_remove)
-            
+            print nodes_covering_less 
             if len(c) - len(nodes_to_remove) >= k:
                 # nodes_to_keep = [x for x in c if x not in nodes_to_remove]
                 # print "nodes after prep:   %d " % len(nodes_to_keep)
