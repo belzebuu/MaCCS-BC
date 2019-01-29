@@ -1,11 +1,11 @@
-from __future__ import print_function
+
 import sys
 from gurobipy import tuplelist
 import random
 from collections import OrderedDict
 import networkx as nx
 import copy
-import data as d
+from . import data as d
 from time import time
 
 class Preprocess:

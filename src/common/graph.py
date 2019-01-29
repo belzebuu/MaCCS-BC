@@ -268,7 +268,7 @@ def make_int_check_connectivity(x_values, int_feas_tol, interactions):
                         edges += add_edges
             in_sol.append(i+1)
         else:
-            print "WRONG VALUE OF x AT POSITION %d" % (i+1)
+            print("WRONG VALUE OF x AT POSITION %d" % (i+1))
     return x_values, in_sol, bfs(in_sol, edges)
 
 

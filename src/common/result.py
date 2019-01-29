@@ -1,7 +1,7 @@
 import sys
 import os.path
 import json
-import data as d
+from . import data as d
 import networkx as nx
 import common.constants as const
 
@@ -21,7 +21,7 @@ class Result:
         """
         self.mode = mode
         self.exclusive = x if x else ' '
-        self.time_limit = time_limit if time_limit else sys.maxint
+        self.time_limit = time_limit if time_limit else sys.maxsize
         self.solve_measurement = list()
 
 
@@ -104,7 +104,7 @@ class Solution:
             self.key += '_w'
         if exclusive:
             self.key += '_x'
-        self.key = unicode(self.key, "utf-8")
+        self.key = str(self.key, "utf-8")
         self.mode = mode
 
     def get_solutions(self):
@@ -134,7 +134,7 @@ class Solution:
         solutions[self.key] = {'value': coverage, 'genes': list(solution_set)}
         json.dump(solutions, sol_file, indent=4)
         sol_file.close()
-        print "Solution saved"
+        print("Solution saved")
         return 0
 
     def add_solution(self, coverage, solution_set):
@@ -145,31 +145,31 @@ class Solution:
         """
         solutions = self.get_all_solutions()
 
-        if self.key in solutions.keys():
-            print "Solution already exists. To add, remove the old solution first. \nOld: %s \nNew:%s" \
-                  % (set(solutions[self.key]), solution_set)
+        if self.key in list(solutions.keys()):
+            print("Solution already exists. To add, remove the old solution first. \nOld: %s \nNew:%s" \
+                  % (set(solutions[self.key]), solution_set))
             return 1
         else:
             sol_file = open(self.output_file, 'w')
             solutions[self.key] = (coverage, list(solution_set))
             json.dump(solutions, sol_file)
             sol_file.close()
-            print "Solution saved"
+            print("Solution saved")
         return 0
     
     def add_solutions(self, solution_dict):
         solutions = self.get_all_solutions()
 
-        if self.key in solutions.keys():
-            print "Solution already exists. To add, remove the old solution first. \nOld: %s \nNew:%s" \
-                  % (set(solutions[self.key]), solution_dict)
+        if self.key in list(solutions.keys()):
+            print("Solution already exists. To add, remove the old solution first. \nOld: %s \nNew:%s" \
+                  % (set(solutions[self.key]), solution_dict))
             return 1
         else:
             sol_file = open(self.output_file, 'w')
             solutions[self.key] = solution_dict
             json.dump(solutions, sol_file)
             sol_file.close()
-            print "Solution saved"
+            print("Solution saved")
         return 0
 
     def coverage(self, solution_set):

@@ -27,8 +27,8 @@ def tolerant_int(x, int_feas_tol):
         elif x[i] <= int_feas_tol:
             x[i] = 0.0
         else:
-            print "WRONG"
-            print i
+            print("WRONG")
+            print(i)
     return x
 
 
@@ -68,7 +68,7 @@ def make_int_check_connectivity(x_values, int_feas_tol, interactions, node_list)
             in_sol.append(node_name)
             x_in_sol.append(i)
         else:
-            print "WRONG VALUE OF x AT POSITION %d" % i
+            print("WRONG VALUE OF x AT POSITION %d" % i)
     return x_values, x_in_sol, gh.bfs(in_sol, edges)
 
 
@@ -85,8 +85,8 @@ def tolerant_int_solution_keys(x, int_feas_tol, node_list):
             solution_keys.add(node_list[i])
             x[i] = 1.0
         elif x[i] >= int_feas_tol:
-            print "WRONG"
-            print i
+            print("WRONG")
+            print(i)
     return solution_keys
 
 

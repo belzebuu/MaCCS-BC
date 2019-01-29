@@ -1,6 +1,6 @@
 from gurobipy import *
 import common.constants as constants
-import callback
+from . import callback
 import common.data as d
 import common.preprocessing as p
 import common.result as r
@@ -26,15 +26,15 @@ class Solver:
     def solve(self):
 
         if self.preprocessing:
-            print "Preprocessing instance..."            
+            print("Preprocessing instance...")            
             #preprocess = p.Preprocess()
             components = p.Preprocess.preprocess(self.data, self.k)
 
             if len(components) == 1:
-                print "single component"
+                print("single component")
                 self.components = components[0]
             else:
-                print "%d components" % (len(components))
+                print("%d components" % (len(components)))
 
 
         objective, solution_set, termination_indicator = 0, set(), 0
@@ -69,19 +69,19 @@ class Solver:
                 main_model = self.clear_statistics(main_model)
                 main_model = self.add_solution_cut(main_model, main_variables, solution_set, objective)
                 main_model._resolve = True
-                print "model resolve ", main_model._resolve
+                print("model resolve ", main_model._resolve)
                 objective, solution_set, termination_indicator = self.solve_model(main_model, main_variables)
                 if solution_set:
-                    print "#%d,%s" % (objective, solution_set)
+                    print("#%d,%s" % (objective, solution_set))
                     if solution_set == previous_sol:
-                        print "Found the same solution"
+                        print("Found the same solution")
                         return objective, solution_set, termination_indicator, self.result
                     else:
                         solution_list.append(solution_set)
 
             return objective, solution_list, termination_indicator, self.result
         else:
-            print "Wrong mode or no solution supplied."
+            print("Wrong mode or no solution supplied.")
             return None
 
     # HELPER FUNCTIONS
@@ -99,9 +99,9 @@ class Solver:
             # get statistics and return solution
 
             if (self.verbose==0):
-                print "Optimal solution found"
-                print "Explored %d nodes" % m.NodeCount
-                print "Best objective "+str(m.ObjVal)+", best bound "+str(m.ObjBound)+", gap "+str(m.MIPGap)+"%"
+                print("Optimal solution found")
+                print("Explored %d nodes" % m.NodeCount)
+                print("Best objective "+str(m.ObjVal)+", best bound "+str(m.ObjBound)+", gap "+str(m.MIPGap)+"%")
 
 
             self.result.solve_measurement.append(r.SolveMeasurement(m.NodeCount, m._callback_count, m._n_lazy,
@@ -117,14 +117,14 @@ class Solver:
                     termination_indicator = 1
 
         elif m.status == GRB.TIME_LIMIT:
-            print 'exceeded time limit'
+            print('exceeded time limit')
         elif GRB.INFEASIBLE:
-            print 'model infeasible'
+            print('model infeasible')
         elif m.status == GRB.INTERRUPTED:
             if self.mode == constants.MODE_VERSUS:
                 termination_indicator = 1
             else:
-                print "Unknown interruption"
+                print("Unknown interruption")
 
         return objective, solution_set, termination_indicator
 
@@ -181,21 +181,21 @@ class Solver:
         m.update()
 
         # # # CONSTRAINTS
-        print "Adding constraints"
+        print("Adding constraints")
         m.addConstr(coverage == quicksum(y[j] for j in self.data.patients), "coverage")
         m.addConstr(exclusive == 2 * coverage - quicksum(x[i] * len(self.data.node_mutations[i])
-                                                         for i in self.data.node_mutations.keys()), "alternative")
+                                                         for i in list(self.data.node_mutations.keys())), "alternative")
         # k vertices
         m.addConstr(quicksum(x[i] for i in self.data.nodes) == self.k)
 
-        print "Adding coverage constraints"
+        print("Adding coverage constraints")
         # constraints either satisfied or y = 0
         for j in self.data.patients:
             m.addConstr(
                 (1 - y[j] + quicksum(x[i] for i in self.data.mutated_genes[j])) >= 1
             )
 
-        print "Constraints posted"
+        print("Constraints posted")
         if self.exclusive:
             m.setObjective(exclusive, GRB.MAXIMIZE)
         else:
@@ -275,7 +275,7 @@ class Solver:
         m.update()
 
         # # # CONSTRAINTS
-        print "Adding constraints"
+        print("Adding constraints")
         for i in self.data.nodes:
             x[i].setAttr(GRB.Attr.BranchPriority, 10)
 
@@ -286,9 +286,9 @@ class Solver:
         m.addConstr(quicksum(x[i] for i in self.data.nodes) == self.k)
 
         # weighted coverage
-        print "Adding coverage constraints"
+        print("Adding coverage constraints")
         if self.data.weights:
-            print "adding weights constraints"
+            print("adding weights constraints")
             for j in self.data.patients:
                 # constraint # 7
                 m.addConstr(
@@ -304,7 +304,7 @@ class Solver:
                         y[j] <= (1 - z[j][idx]) + self.data.weights[i]*z[j][idx]
                     )
 
-        print "Constraints posted"
+        print("Constraints posted")
         m.setObjective(coverage, GRB.MAXIMIZE)
 
         # variables accessible in callback
@@ -340,7 +340,7 @@ class Solver:
     def add_solution_cut(self, m, variables, sol_set, objective=None):
         m.params.OutputFlag = 0  # TODO ?
         x, _, coverage, alternative = variables
-        print "Adding solution cut and objective value bound"
+        print("Adding solution cut and objective value bound")
         assert len(sol_set) == self.k
         m.addConstr(quicksum(x[i] for i in sol_set) <= self.k - 1)
         if objective:

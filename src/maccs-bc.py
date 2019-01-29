@@ -1,5 +1,5 @@
-#!/usr/bin/python
-from __future__ import print_function
+#!/usr/bin/python3
+
 from gurobipy import *
 import model.model as model
 import argparse

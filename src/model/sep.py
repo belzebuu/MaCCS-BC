@@ -12,7 +12,7 @@ class NodeSep:
 
 
 def unvisited_node(component_idx):
-    for k in component_idx.keys():
+    for k in list(component_idx.keys()):
         if component_idx[k] == 0:
             return k
     return None
@@ -44,7 +44,7 @@ def solution_components(x_sol_keys, node_neighbors):
         k = unvisited_node(component_idx)
         if k:
             if k not in node_neighbors:
-                print "%d has no neighbors" % k
+                print("%d has no neighbors" % k)
                 component_idx[k] = k
                 continue
             accessible_k = bfs_k(k, x_sol_keys, node_neighbors)

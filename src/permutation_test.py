@@ -22,7 +22,7 @@ def main(args):
     base_obj, sol_set, _, _ = solver.solve()
 
     if not base_obj:
-        print "Solution not found"
+        print("Solution not found")
         return
 
     mode = const.MODE_VERSUS
@@ -31,7 +31,7 @@ def main(args):
         threads = args.threads
 
     pool = Pool(processes=threads)
-    a_args = range(args.n)
+    a_args = list(range(args.n))
     b_args = [model.Solver(mode, args.interactions, args.mutations, args.k, args.weights,
                            args.exclusive, args.verbose, args.time_limit, args.preprocessing,
                            data=d.Data.from_file(args.interactions, args.mutations, args.weights).permute_mutations(seed),
@@ -42,16 +42,16 @@ def main(args):
     pool.close()
     pool.join()
 
-    print result
+    print(result)
     count = 0
     for i in result:
         count += i
     del a_args
     del b_args
-    print "# Parallel test completed in: %s" % (time.time()-start_time)
+    print("# Parallel test completed in: %s" % (time.time()-start_time))
 
-    print "count = %d" % count
-    print "p value %s" % ((1.0 + count) / (1.0 + args.n))
+    print("count = %d" % count)
+    print("p value %s" % ((1.0 + count) / (1.0 + args.n)))
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 from gurobipy import GRB, quicksum, GurobiError
-import helpers as h
-import sep as s
+from . import helpers as h
+from . import sep as s
 import time
 
 
@@ -27,8 +27,8 @@ def mipnode_info(model):
 def print_mipnode(model):
     nodecnt, solcnt, obj, objbnd, status, runtime = mipnode_info(model)
     if model.cbGet(GRB.Callback.MIPNODE_STATUS) == GRB.Status.OPTIMAL:
-        print 'MIPNODE NODE : %d    SOLCNT:  %d   OBJBST:  %d   OBJBND:  %s      STATUS:  %d' \
-                      % (nodecnt, solcnt, obj, objbnd, status)
+        print('MIPNODE NODE : %d    SOLCNT:  %d   OBJBST:  %d   OBJBND:  %s      STATUS:  %d' \
+                      % (nodecnt, solcnt, obj, objbnd, status))
 
 
 def node_sep(model, where):
@@ -39,7 +39,7 @@ def node_sep(model, where):
             # UPPER BOUND LOWER THAN BASIC SOLUTION. TERMINATE.
             if model._base_obj:
                 if objbnd < model._base_obj:
-                    print "TERMINATED. UPPER BOUND < BASE SOL, %s < %s" % (objbnd, model._base_obj)
+                    print("TERMINATED. UPPER BOUND < BASE SOL, %s < %s" % (objbnd, model._base_obj))
                     model._termination_indicator = 0
                     model.terminate()
             # Get statistics at root
@@ -67,17 +67,17 @@ def node_sep(model, where):
                             <= quicksum(model._vars[model._node_indices[u]] for u in viol.separator)
                         )
                     except GurobiError as e:
-                        print "Error %d" % e.errno
-                        print e.message
+                        print("Error %d" % e.errno)
+                        print(e.message)
                 model._active_callback_count += 1
                 model._n_lazy += len(violations)
                 if nodecnt == 0:
                     model._active_root_callback_count += 1
                     model._n_root_lazy += len(violations)
-                print "Integer solution not feasible: found %d lazy constraints violated to be added" % len(violations)
+                print("Integer solution not feasible: found %d lazy constraints violated to be added" % len(violations))
                 if model._base_obj:
                     if obj > model._base_obj:
-                        print "TERMINATED. LOWER BOUND > BASE SOL, BND: %s" % obj
+                        print("TERMINATED. LOWER BOUND > BASE SOL, BND: %s" % obj)
                         model._termination_indicator = 1
                         model.terminate()
     elif where == GRB.callback.MIPNODE:

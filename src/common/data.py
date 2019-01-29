@@ -87,7 +87,7 @@ class Data:
                 if patient not in self.patients:
                     self.patients.append(patient)
                 else:
-                    print "Patient "+patient+" repeated."
+                    print("Patient "+patient+" repeated.")
                 #patient_added = False
                 for g_node in fields[1:]:
                     seen_genes.add(g_node)
@@ -96,12 +96,12 @@ class Data:
                         #if not patient_added:
                         #patient_added = True
                         self.append_mutation(patient, g_node)
-            if len(self.patients) > len(self.mutated_genes.keys()):
-                print "Discarded %d patients because they contain only mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))
+            if len(self.patients) > len(list(self.mutated_genes.keys())):
+                print("Discarded %d patients because they contain only mutations of non given genes" % (len(self.patients) - len(list(self.mutated_genes.keys()))))
                 del self.patients
-                self.patients = self.mutated_genes.keys()
+                self.patients = list(self.mutated_genes.keys())
             if len(seen_genes) != len(given_genes):
-                print "Genes in mutations %d and given %d" % (len(seen_genes), len(given_genes))
+                print("Genes in mutations %d and given %d" % (len(seen_genes), len(given_genes)))
 
         if weight_file:
             with open(weight_file) as wf:
@@ -109,7 +109,7 @@ class Data:
                     g_node, weight = line.split()
                     if not float(weight) == 0.0:
                         self.weights[g_node] = float(weight)
-        print self
+        print(self)
 
 
     # READ IN DATA
@@ -154,12 +154,12 @@ class Data:
             # Each protein has one gene only
             for a in label_gene:
                 if len(label_gene[a])>1:
-                    print(a,label_gene[a])
+                    print((a,label_gene[a]))
 
             # A gene can be in more than one protein
             for b in gene_node:
                 if len(gene_node[b])>1:
-                    print(b,gene_node[b])
+                    print((b,gene_node[b]))
 
         with open(interaction_file) as inf:
             for line in inf:
@@ -185,16 +185,16 @@ class Data:
                 if patient not in self.patients:
                     self.patients.append(patient)
                 else:
-                    print "Patient "+patient+" repeated"
+                    print("Patient "+patient+" repeated")
                 if len(fields)==1:
-                    print patient
+                    print(patient)
                 for gene in fields[1:]:
                     if gene in given_genes:
                         self.append_mutation(patient, gene)
-            if len(self.patients) > len(self.mutated_genes.keys()):
-                print "Discarded %d patients because mutations of non given genes" % (len(self.patients) - len(self.mutated_genes.keys()))                
+            if len(self.patients) > len(list(self.mutated_genes.keys())):
+                print("Discarded %d patients because mutations of non given genes" % (len(self.patients) - len(list(self.mutated_genes.keys()))))                
                 del self.patients
-                self.patients = self.mutated_genes.keys()
+                self.patients = list(self.mutated_genes.keys())
 
         if weight_file:
             max_weight = 0.0
@@ -207,7 +207,7 @@ class Data:
                             max_weight = float(weight)
 
             if max_weight > 1:
-                print "Normalize weights from [0,%f] to [0,1]" % max_weight
+                print("Normalize weights from [0,%f] to [0,1]" % max_weight)
                 for gene in self.weights:
                     self.weights[gene] /= max_weight
 
@@ -219,7 +219,7 @@ class Data:
         #    continue
 
                       
-        print self
+        print(self)
         #        print self.nodes
         #print self.patients
 
@@ -267,14 +267,14 @@ class Data:
 
     # SHUFFLE
     def permute_mutations(self, seed):
-        print "shuffling keys"
+        print("shuffling keys")
         original = copy.deepcopy(self)
 
         index_dictionary = {n: n for n in self.nodes}
         keys = copy.deepcopy(self.nodes)
         random.seed(seed)
         random.shuffle(keys)
-        shuffled_dictionary = dict(zip(keys, index_dictionary.values()))
+        shuffled_dictionary = dict(list(zip(keys, list(index_dictionary.values()))))
 
         self.mutations = list()
         self.interactions = list()
